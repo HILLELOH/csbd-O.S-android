@@ -15,7 +15,7 @@ The following packages need to be installed to run the code:
 
 Just clone the repo and follow the following instructions:
 
-1. Move to the "src" folder.
+1. Move to the "src" folder in your shell.
 
 2. Run 'python Main.py --help' for the input arguments
 CSBD can be run in 2 modes: (1) Random split classification, (2) Holdout classifiction. In random split mode, the apps in the given dataset are split into training and test sets and are used to train and evaluate the malware detection model, respectively. In the holdout classification mode, separate training and test sets could be provided by the user. 
