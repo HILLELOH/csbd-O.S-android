@@ -11,6 +11,7 @@ import os, sys, glob
 from random import randint
 import logging
 from time import time
+import pickle as pck
 
 #logging level
 logging.basicConfig(level=logging.INFO)
@@ -78,8 +79,33 @@ def HoldoutClassification(TrainMalwareCorpus, TrainGoodwareCorpus, TestMalwareCo
     Parameters = {'n_estimators': [10, 50, 100, 200, 500, 1000],
                   'bootstrap': [True, False],
                   'criterion': ['gini', 'entropy']}
+    
+    #check num of files from Classifiers directory
+    
+    dir_path = "C:\\Users\\hille\\Documents\\CSBD_docker\\csbd-O.S-android\\Saves\\Classifiers"
+    count = 1
+    # Iterate directory
+    for path in os.listdir(dir_path):
+        # check if current path is a file
+        if os.path.isfile(os.path.join(dir_path, path)):
+            count += 1
+    print('File count:', count)
+    
     Clf = GridSearchCV(RandomForestClassifier(), Parameters, cv=5, scoring='f1', n_jobs=-1)
     RFmodels = Clf.fit(XTrain, YTrain)
+    
+    #save the classifier, X_test, Y_test into binary file
+    classifires_path = "C:\\Users\\hille\\\Documents\\CSBD_docker\\csbd-O.S-android\\\Saves\\Classifiers\\RFmodels_{count}.pkl"
+    pck.dump(RFmodels, open(file_path, 'wb'))
+    
+    X_tests_path = "C:\\Users\\hille\\Documents\\CSBD_docker\\csbd-O.S-android\\Saves\\X_tests\\XTest_{count}.pkl"
+    pck.dump(XTest, open(X_tests_path, 'wb'))
+    
+    Y_tests_path = "C:\\Users\\hille\\Documents\\CSBD_docker\\csbd-O.S-android\\Saves\\Y_tests\\YTest_{count}.pkl"
+    pck.dump(YTest, open(Y_tests_path, 'wb'))
+
+    
+    
     BestModel = RFmodels.best_estimator_
     Logger.info('CV done - Best model selected: {}'.format(BestModel))
     # Best model is chosen through 5-fold cross validation and stored in the variable: RFmodels
