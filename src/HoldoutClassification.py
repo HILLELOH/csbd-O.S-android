@@ -45,6 +45,13 @@ def HoldoutClassification(TrainMalwareCorpus, TrainGoodwareCorpus, TestMalwareCo
     # Step 2: Creating feature vectors
     FeatureVectorizer = TF(input='filename', lowercase=False, token_pattern=None,
                            tokenizer=MyTokenizer, binary=FeatureOption, dtype=np.float64)
+    #######################
+    TrainMalSamples = random.sample(TrainMalSamples,(int(round(len(TrainMalSamples)*0.05))))
+    TrainGoodSamples = random.sample(TrainGoodSamples,(int(round(len(TrainGoodSamples)*0.05))))
+    
+    TestMalSamples = random.sample(TestMalSamples,(int(round(len(TestMalSamples)*0.05))))
+    TestGoodSamples = random.sample(TestGoodSamples,(int(round(len(TestGoodSamples)*0.05))))
+    #######################
     XTrain = FeatureVectorizer.fit_transform(TrainMalSamples + TrainGoodSamples)
     XTest = FeatureVectorizer.transform(TestMalSamples + TestGoodSamples)
 
