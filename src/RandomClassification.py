@@ -11,7 +11,6 @@ import os, sys, glob
 from random import randint
 import logging
 from time import time
-import pickle as pck
 
 #logging level
 logging.basicConfig(level=logging.INFO)
@@ -42,7 +41,17 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
     # Step 2: Creating feature vector
     FeatureVectorizer = TF(input='filename', lowercase=False, token_pattern=None,
                            tokenizer=MyTokenizer, binary=FeatureOption, dtype=np.float64)
+
+    Logger.info("#################################################################################")
+    Logger.info(FeatureVectorizer)
+
+    Logger.info("#################################################################################")
+
     X = FeatureVectorizer.fit_transform(AllMalSamples + AllGoodSamples)
+    Logger.info("#################################################################################")
+    Logger.info(X)
+
+    Logger.info("#################################################################################")
 
     # Label malware as 1 and goodware as -1
     MalLabels = np.ones(len(AllMalSamples))
@@ -57,6 +66,17 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
     Logger.debug ("Test set split = %s", TestSize)
 
     Features = FeatureVectorizer.get_feature_names()
+    #her i started to get the features:
+    Logger.info("################################################################")
+    bound = 0
+    for i in Features:
+        if bound > 20:
+            break
+        Logger.info(i)
+        bound+=1
+
+    Logger.info("################################################################")
+
     Logger.info ("Total number of features: {} ".format(len(Features)))
 
     if len(Features) > NumFeaturesToBeSelected:
@@ -85,7 +105,22 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
     # Step 5: Evaluate the best model on test set
     YPred = RFmodels.predict(XTest)
     Accuracy = accuracy_score(YTest, YPred)
+
+    Logger.info("#################################################################################")
+    Logger.info("and her the predictions answer")
+    for i in YPred:
+        Logger.info(i)
+    Logger.info("and her the true answer")
+    for i in YTest:
+        Logger.info(i)
+
+    Logger.info("#################################################################################")
+
+
     print "Test Set Accuracy = ", Accuracy
     print(metrics.classification_report(YTest, YPred,  labels=[1, -1], target_names=['Malware', 'Goodware']))
+
+
+
 
 
