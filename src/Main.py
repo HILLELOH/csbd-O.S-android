@@ -24,8 +24,7 @@ def main(Args, FeatureOption):
     if Args.randomsplit == 1:
         # Random Classification to be performed
         TestSize = Args.testsize
-        Logger.debug("MalDir: {}, GoodDir: {}, ProcessNo: {}, TestSize: {}, " \
-          "NumFeaturesToBeSelected: {}, FeatureOption: {}, TimeOut: {}".format(MalDir, GoodDir,
+        Logger.debug("MalDir: {}, GoodDir: {}, ProcessNo: {}, TestSize: {}, NumFeaturesToBeSelected: {}, FeatureOption: {}, TimeOut: {}".format(MalDir, GoodDir,
                                                                   ProcessNo,
                                                                   TestSize,
                                                                   NumFeaturesToBeSelected,
@@ -71,3 +70,4 @@ def ParseArgs():
     return Args.parse_args()
 if __name__ == "__main__":
     main(ParseArgs(), False)
+
