@@ -23,7 +23,7 @@ def GetCFGString(ApkFName, OutputFName):
 
     T0 = time()
     try:
-        a, d, dx = androlyze.AnalyzeAPK(ApkFName)
+        a, d, dx = androlyze.AnalyzeAPK(ApkFName)  
     except zipfile.BadZipfile:
         # if file is not an APK, may be a dex object
         try:
