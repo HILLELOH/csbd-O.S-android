@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("Androguard")
 import androlyze
 import zipfile
@@ -13,17 +14,17 @@ from pebble import ProcessPool
 def GetCFGString(ApkFName, OutputFName):
     '''
 	Get the CFG string of an apk and write to a txt file
-
-	:param String ApkFName: absolute path of the apk file
-	:param String OutputFName: absolute path of the txt file
+	param String ApkFName: absolute path of the apk file
+	param String OutputFName: absolute path of the txt file
 	'''
+
     if os.path.isfile(OutputFName):
         print 'Output file: {} exists, so skipping {}'.format(OutputFName, ApkFName)
         return
 
     T0 = time()
     try:
-        a, d, dx = androlyze.AnalyzeAPK(ApkFName)  
+        a, d, dx = androlyze.AnalyzeAPK(ApkFName)
     except zipfile.BadZipfile:
         # if file is not an APK, may be a dex object
         try:
@@ -67,7 +68,8 @@ def GetDataSet(ApkDir, ProcessNo, TimeOut):
 
     print "=========== Extracting CFG string ============="
     with ProcessPool(max_workers=ProcessNo) as pool:
-        jobs = [pool.schedule(GetCFGString, args=[ApkFile, OpFName], timeout=TimeOut) for ApkFile, OpFName in zip(ApkFilesToProcess, OpFNames)]
+        jobs = [pool.schedule(GetCFGString, args=[ApkFile, OpFName], timeout=TimeOut) for ApkFile, OpFName in
+                zip(ApkFilesToProcess, OpFNames)]
 
     for j in jobs:
         try:

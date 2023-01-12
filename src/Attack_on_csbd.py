@@ -64,6 +64,13 @@ def wrrap():
     print(metrics.classification_report(Ytest, after_attack_prediction, labels=[1, -1],
                                         target_names=['Malware', 'Goodware']))
 
+    print "################################### Xtest-prints #########################################"
+    i = 0
+    for txt_file in Xtest:
+        if i == 3:
+            return
+        print txt_file
+        i+=1
 
 if __name__ == '__main__':
     wrrap()
