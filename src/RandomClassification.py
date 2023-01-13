@@ -13,7 +13,12 @@ import os, sys, glob
 from random import randint
 import logging
 from time import time
+import warnings
 
+
+# filter out warnings about deprecated modules
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.simplefilter("ignore", DeprecationWarning)
 # logging level
 logging.basicConfig(level=logging.INFO)
 Logger = logging.getLogger('RandomClf.stdout')

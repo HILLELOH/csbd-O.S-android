@@ -7,6 +7,11 @@ from sklearn.metrics import accuracy_score
 
 from RandomClassification import count_dir
 import logging
+import warnings
+
+# filter out warnings about deprecated modules
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.simplefilter("ignore", DeprecationWarning)
 
 # logging level
 logging.basicConfig(level=logging.INFO)
@@ -47,23 +52,19 @@ def get_last_try():
 
 
 def Xtest_attack():
-    cx = scipy.sparse.coo_matrix(Xtest)
-
-    for v in cx.data:
-        if v is not None:
-            v = v + random()
-            if v>=1:
-                v=1-random()
-    return cx.tocoo()
-#ניסיתי לעשות את המימוש אבל לא הצליח לי אחי פשוט תגרום פה שהערכים של הXTEST ישתנו רנדומלית ואז להחזיר sparse matrix חדשה עם ערכים חדשים רנדומלית
+    for i, j in zip(*Xtest.nonzero()):
+        Xtest[i, j] = Xtest[i, j] * random()
+    return Xtest
 
 
 def wrrap():
     get_last_try()
+
     new_Xtest = Xtest_attack()
-    after_attack_prediction = clf.predict(new_Xtest)
+    new_Ypred = clf.predict(new_Xtest)
+
     before = accuracy_score(Ytest, Ypred)
-    after = accuracy_score(Ytest, after_attack_prediction)
+    after = accuracy_score(Ytest, new_Ypred)
 
     print "Accuracy before attack: ", before
     print(metrics.classification_report(Ytest, Ypred, labels=[1, -1], target_names=['Malware', 'Goodware']))
@@ -71,10 +72,10 @@ def wrrap():
     print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! After Attack !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 
     print "Accuracy after attack: ", after
-    print(metrics.classification_report(Ytest, after_attack_prediction, labels=[1, -1],
+    print(metrics.classification_report(Ytest, new_Ypred, labels=[1, -1],
                                         target_names=['Malware', 'Goodware']))
 
-    print "################################### Xtest-prints #########################################"
+    #print "################################### Xtest-prints #########################################"
     # i = 0
     # for txt_file in Xtest:
     #     if i == 3:
