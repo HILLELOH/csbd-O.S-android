@@ -1,5 +1,7 @@
 import pickle
+from random import random
 
+import scipy
 from sklearn import metrics
 from sklearn.metrics import accuracy_score
 
@@ -45,7 +47,15 @@ def get_last_try():
 
 
 def Xtest_attack():
-    return Xtest
+    cx = scipy.sparse.coo_matrix(Xtest)
+
+    for v in cx.data:
+        if v is not None:
+            v = v + random()
+            if v>=1:
+                v=1-random()
+    return cx.tocoo()
+#ניסיתי לעשות את המימוש אבל לא הצליח לי אחי פשוט תגרום פה שהערכים של הXTEST ישתנו רנדומלית ואז להחזיר sparse matrix חדשה עם ערכים חדשים רנדומלית
 
 
 def wrrap():
@@ -65,12 +75,18 @@ def wrrap():
                                         target_names=['Malware', 'Goodware']))
 
     print "################################### Xtest-prints #########################################"
-    i = 0
-    for txt_file in Xtest:
-        if i == 3:
-            return
-        print txt_file
-        i+=1
+    # i = 0
+    # for txt_file in Xtest:
+    #     if i == 3:
+    #         return
+    #     print txt_file
+    #     i+=1
+
+    # cx = scipy.sparse.coo_matrix(Xtest)
+    #
+    # for i, j, v in zip(cx.row, cx.col, cx.data):
+    #     print "(%d, %d), %s" % (i, j, v)
+
 
 if __name__ == '__main__':
     wrrap()

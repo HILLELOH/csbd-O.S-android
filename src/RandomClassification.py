@@ -72,7 +72,10 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
     X = FeatureVectorizer.fit_transform(AllMalSamples + AllGoodSamples)
     Logger.info("#################################################################################")
     Logger.info(X)
-
+    Logger.info('1231232132132132132132132132132132132132132132132132132')
+    Logger.info(len(FeatureVectorizer.get_feature_names()))
+    Logger.info(len(AllMalSamples))
+    Logger.info(len(AllGoodSamples))
     Logger.info("#################################################################################")
 
     # Label malware as 1 and goodware as -1
