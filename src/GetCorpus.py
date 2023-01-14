@@ -53,7 +53,7 @@ def GetCFGString(ApkFName, OutputFName):
 
 def GetDataSet(ApkDir, ProcessNo, TimeOut):
     '''
-	Construct a collection of corpuses, containing CFG strings of goodware and malware apks, in txt files
+	:Construct a collection of corpuses, containing CFG strings of goodware and malware apks, in txt files
 
 	:param String ApkDir: absolute path of the root directory of goodware and malware apks
 	:param int/String ProcessNo: number of processes scheduled

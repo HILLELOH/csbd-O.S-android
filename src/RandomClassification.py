@@ -1,4 +1,5 @@
 import pickle
+import shutil
 
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer as TF
@@ -29,7 +30,7 @@ def MyTokenizer(Str):
     return Str.split()
 
 
-def count_dir(path_dir):
+def count_files_dir(path_dir):
     """
     input:
         path_dir: (string) path to directory
@@ -47,6 +48,10 @@ def count_dir(path_dir):
     return count
 
 
+def count_folders_dir(directory_path):
+    return len([f for f in os.listdir(directory_path) if os.path.isdir(os.path.join(directory_path, f))])
+
+
 def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToBeSelected, FeatureOption):
     '''
     Train a classifier for classifying malwares and goodwares using Random Forest technique
@@ -54,7 +59,7 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
 
     :param String MalwareCorpus: absolute path of the malware corpus
     :param String GoodwareCorpus: absolute path of the goodware corpus
-    :param Float TestSize: test set split (default is 0.3 for testing and 0.7 for training)
+    :param Float TestSize: test set split (default is 0.2 for testing and 0.8 for training) - won't be set
     :param integer NumFeaturesToBeSelected: number of top features to select
     :param Boolean FeatureOption: False
     '''
@@ -63,6 +68,7 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
     Logger.debug("Loading positive and negative samples")
     AllMalSamples = glob.glob(os.path.join(MalwareCorpus, '*txt'))
     AllGoodSamples = glob.glob(os.path.join(GoodwareCorpus, '*txt'))
+    print(AllGoodSamples)
     Logger.info("All Samples loaded")
 
     # Step 2: Creating feature vector
@@ -86,6 +92,25 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
     # Label malware as 1 and goodware as -1
     MalLabels = np.ones(len(AllMalSamples))
     GoodLabels = np.empty(len(AllGoodSamples))
+
+    if not os.path.exists(".\\AllMalSamples"):
+        os.mkdir(".\\AllMalSamples")
+    count_AllMalSamples = count_folders_dir(".\\AllMalSamples") + 1
+    os.mkdir(".\\AllMalSamples\\AllMalSamples_%s" % count_AllMalSamples)
+    count_files = 1
+    for txt_file in AllMalSamples:
+        shutil.copy(txt_file, '.\\AllMalSamples\\AllMalSamples_%s\\good_txt_file_%s.txt' % (count_AllMalSamples, count_files))
+        count_files += 1
+
+    if not os.path.exists(".\\AllGoodSamples"):
+        os.mkdir(".\\AllGoodSamples")
+    count_AllGoodSamples = count_folders_dir(".\\AllGoodSamples") + 1
+    os.mkdir(".\\AllGoodSamples\\AllGoodSamples_%s" % count_AllGoodSamples)
+    count_files = 1
+    for txt_file in AllGoodSamples:
+        shutil.copy(txt_file,'.\\AllGoodSamples\\AllGoodSamples_%s\\mal_txt_file_%s.txt' % (count_AllGoodSamples, count_files))
+        count_files += 1
+
     GoodLabels.fill(-1)
     Y = np.concatenate((MalLabels, GoodLabels), axis=0)
     Logger.info("Label array - generated")
@@ -124,6 +149,7 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
     Parameters = {'n_estimators': [10, 50, 100, 200, 500, 1000],
                   'bootstrap': [True, False],
                   'criterion': ['gini', 'entropy']}
+
     Clf = GridSearchCV(RandomForestClassifier(), Parameters, cv=5, scoring='f1', n_jobs=-1)
     RFmodels = Clf.fit(XTrain, YTrain)
     BestModel = RFmodels.best_estimator_
@@ -133,17 +159,17 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
     # save the classifier and the Xtest, Ytest and the clf
     if not os.path.exists(".\\Clf_storage"):
         os.mkdir(".\\Clf_storage")
-    count_clf = count_dir(".\\Clf_storage") + 1
+    count_clf = count_files_dir(".\\Clf_storage") + 1
     pickle.dump(RFmodels, open('.\\Clf_storage\\model_%s.pkl' % count_clf, 'wb'))
 
     if not os.path.exists(".\\Xtests"):
         os.mkdir(".\\Xtests")
-    count_Xtests = count_dir(".\\Xtests") + 1
+    count_Xtests = count_files_dir(".\\Xtests") + 1
     pickle.dump(XTest, open('.\\Xtests\\Xtest_%s.pkl' % count_Xtests, 'wb'))
 
     if not os.path.exists(".\\Ytests"):
         os.mkdir(".\\Ytests")
-    count_Ytests = count_dir(".\\Ytests") + 1
+    count_Ytests = count_files_dir(".\\Ytests") + 1
     pickle.dump(YTest, open('.\\Ytests\\Ytest_%s.pkl' % count_Ytests, 'wb'))
 
     # Step 5: Evaluate the best model on test set
@@ -151,7 +177,7 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
 
     if not os.path.exists(".\\Ypreds"):
         os.mkdir(".\\Ypreds")
-    count_YPreds = count_dir(".\\Ypreds") + 1
+    count_YPreds = count_files_dir(".\\Ypreds") + 1
     pickle.dump(Ypred, open('.\\Ypreds\\Ypred_%s.pkl' % count_YPreds, 'wb'))
 
     Accuracy = accuracy_score(YTest, Ypred)
@@ -168,4 +194,3 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
 
     print "Test Set Accuracy = ", Accuracy
     print(metrics.classification_report(YTest, Ypred, labels=[1, -1], target_names=['Malware', 'Goodware']))
-
