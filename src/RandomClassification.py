@@ -1,4 +1,5 @@
 import pickle
+import pprint
 import shutil
 
 import numpy as np
@@ -52,6 +53,12 @@ def count_folders_dir(directory_path):
     return len([f for f in os.listdir(directory_path) if os.path.isdir(os.path.join(directory_path, f))])
 
 
+def dump_argument(path, name, obj):
+    if not os.path.exists(path):
+        os.mkdir(path)
+    count_TF = count_files_dir(path) + 1
+    pickle.dump(obj, open('%s\\%s_%s.pkl' % (path, name, count_TF), 'wb'))
+
 def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToBeSelected, FeatureOption):
     '''
     Train a classifier for classifying malwares and goodwares using Random Forest technique
@@ -81,6 +88,16 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
     Logger.info("#################################################################################")
 
     X = FeatureVectorizer.fit_transform(AllMalSamples + AllGoodSamples)
+
+    feature_names_array = FeatureVectorizer.get_feature_names()
+    feature_vocabulary_array = FeatureVectorizer.vocabulary_
+    dump_argument(".\\FEATURES_NAMES", "FEATURE_NAME", feature_names_array)
+    dump_argument(".\\FEATURES_VOCABULARYS", "FEATURE_VOCABULARY", feature_vocabulary_array)
+
+    #pprint.pprint(FeatureVectorizer.get_feature_names())
+
+    dump_argument(".\\FVs", "FV", FeatureVectorizer)
+
     Logger.info("#################################################################################")
     Logger.info(X)
     Logger.info('1231232132132132132132132132132132132132132132132132132')
@@ -157,28 +174,17 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
     # Best model is chosen through 5-fold cross validation and stored in the variable: RFmodels
 
     # save the classifier and the Xtest, Ytest and the clf
-    if not os.path.exists(".\\Clf_storage"):
-        os.mkdir(".\\Clf_storage")
-    count_clf = count_files_dir(".\\Clf_storage") + 1
-    pickle.dump(RFmodels, open('.\\Clf_storage\\model_%s.pkl' % count_clf, 'wb'))
 
-    if not os.path.exists(".\\Xtests"):
-        os.mkdir(".\\Xtests")
-    count_Xtests = count_files_dir(".\\Xtests") + 1
-    pickle.dump(XTest, open('.\\Xtests\\Xtest_%s.pkl' % count_Xtests, 'wb'))
+    dump_argument(".\\Clf_storages", "model", RFmodels)
+    dump_argument(".\\Xtests", "Xtest", XTest)
+    dump_argument(".\\Ytests", "Ytest", YTest)
 
-    if not os.path.exists(".\\Ytests"):
-        os.mkdir(".\\Ytests")
-    count_Ytests = count_files_dir(".\\Ytests") + 1
-    pickle.dump(YTest, open('.\\Ytests\\Ytest_%s.pkl' % count_Ytests, 'wb'))
 
     # Step 5: Evaluate the best model on test set
     Ypred = RFmodels.predict(XTest)
+    dump_argument(".\\Ypreds", "Ypred", Ypred)
 
-    if not os.path.exists(".\\Ypreds"):
-        os.mkdir(".\\Ypreds")
-    count_YPreds = count_files_dir(".\\Ypreds") + 1
-    pickle.dump(Ypred, open('.\\Ypreds\\Ypred_%s.pkl' % count_YPreds, 'wb'))
+
 
     Accuracy = accuracy_score(YTest, Ypred)
 
