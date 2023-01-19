@@ -2,15 +2,17 @@ import glob
 import os
 import pickle
 import pprint
-from random import random
+from random import random, randint
 
 import numpy as np
 import scipy
 from scipy.sparse import csc_matrix
+from scipy.stats import chi2
 from sklearn import metrics
+from sklearn.feature_selection import SelectKBest
 from sklearn.metrics import accuracy_score
 
-from RandomClassification import count_files_dir,count_folders_dir, MyTokenizer
+from RandomClassification import *
 from sklearn.feature_extraction.text import TfidfVectorizer as TF
 import logging
 import warnings
@@ -31,13 +33,17 @@ def get_last_try():
     from the pickle files that "Random Classification" write
     """
 
-    global clf, Xtest, Ytest, Ypred, AllGoodSamples, AllMalSamples, FV_original, features_names_arr, features_vocabulary
+    global clf, Xtest, Ytest, Ypred, AllGoodSamples, AllMalSamples, AllGoodSamples_change, AllMalSamples_change, FV_original, \
+    FV_change, Xtest_features_names, Xtest_features_vocabulary, FSAlgo
 
     count_good_samples = count_folders_dir('.\\AllGoodSamples')
     count_mal_samples = count_folders_dir('.\\AllMalSamples')
 
     AllGoodSamples = glob.glob(os.path.join('.\\AllGoodSamples\\AllGoodSamples_%s' % count_good_samples, '*txt'))
     AllMalSamples = glob.glob(os.path.join('.\\AllMalSamples\\AllMalSamples_%s' % count_mal_samples, '*txt'))
+
+    AllGoodSamples_change = glob.glob(os.path.join('.\\AllGoodSamples_change\\AllGoodSamples_change_%s' % count_good_samples, '*txt'))
+    AllMalSamples_change = glob.glob(os.path.join('.\\AllMalSamples_change\\AllMalSamples_change_%s' % count_mal_samples, '*txt'))
 
     count_all = count_files_dir(".\\Clf_storages")
 
@@ -46,8 +52,10 @@ def get_last_try():
     Ytest_path = '.\\Ytests\\Ytest_%s.pkl' % count_all
     Ypred_path = '.\\Ypreds\\Ypred_%s.pkl' % count_all
     FV_original_path = '.\\FVs\\FV_%s.pkl' % count_all
+    FV_change_path = '.\\FVs_change\\FV_change_%s.pkl' % count_all
     features_names_arr_path = '.\\FEATURES_NAMES\\FEATURE_NAME_%s.pkl' % count_all
     features_vocabulary_path = '.\\FEATURES_VOCABULARYS\\FEATURE_VOCABULARY_%s.pkl' % count_all
+    FSAlgo_path = '.\\FSAlgos\\FSAlgo_%s.pkl' % count_all
 
     f_clf = open(clf_path, 'rb')
     clf = pickle.load(f_clf)
@@ -64,87 +72,32 @@ def get_last_try():
     f_FV_original = open(FV_original_path, 'rb')
     FV_original = pickle.load(f_FV_original)
 
+    f_FV_change = open(FV_change_path, 'rb')
+    FV_change = pickle.load(f_FV_change)
+
     f_features_names_arr = open(features_names_arr_path, 'rb')
-    features_names_arr = pickle.load(f_features_names_arr)
+    Xtest_features_names = pickle.load(f_features_names_arr)
 
     f_features_vocabulary = open(features_vocabulary_path, 'rb')
-    features_vocabulary = pickle.load(f_features_vocabulary)
+    Xtest_features_vocabulary = pickle.load(f_features_vocabulary)
 
-
-# def return_sparse1():
-#     FV_good = TF(input='filename', lowercase=False, token_pattern=None,
-#                                 tokenizer=MyTokenizer, binary=False, dtype=np.float64)
-#
-#     FV_mal = TF(input='filename', lowercase=False, token_pattern=None,
-#                                tokenizer=MyTokenizer, binary=False, dtype=np.float64)
-#
-#
-#
-#     print(AllGoodSamples)
-#
-#     good_sparse = FV_good.fit_transform(AllGoodSamples)
-#     mal_sparse = FV_mal.fit_transform(AllMalSamples)
-#
-#     dense1 = good_sparse.todense()
-#     dense2 = mal_sparse.todense()
-#
-#     feature_names1 = FV_good.get_feature_names()
-#     feature_names2 = FV_mal.get_feature_names()
-#
-#     value_good = good_sparse.toarray()[0]
-#     value_mal = mal_sparse.toarray()[0]
-#
-#
-#     print ("kdfpakjdnmflaksdmfakl;sdf;alsdkf;alkdf;alsdkf;alsdk;alsdkf;alsdkf;alsdkf;alsdkfa;sdlkfa;sdlkf")
-#
-#     #pprint.pprint(tfidf_dict_good)
-#     #pprint.pprint(feature_names1)
-#
-#     tfidf_dict_good = dict(zip(feature_names1, value_good))
-#     tfidf_dict_mal = dict(zip(feature_names2, value_mal))
-#
-#
-#     return tfidf_dict_good, tfidf_dict_mal
-
+    f_FSAlgo_path = open(FSAlgo_path, 'rb')
+    FSAlgo = pickle.load(f_FSAlgo_path)
 
 def return_sparse():
     global FV_good, FV_mal
 
     FV_good = TF(input='filename', lowercase=False, token_pattern=None,
-                                tokenizer=MyTokenizer, binary=False, dtype=np.float64)
+                 tokenizer=MyTokenizer, binary=False, dtype=np.float64)
 
     FV_mal = TF(input='filename', lowercase=False, token_pattern=None,
-                               tokenizer=MyTokenizer, binary=False, dtype=np.float64)
-
+                tokenizer=MyTokenizer, binary=False, dtype=np.float64)
 
     good_sparse = FV_good.fit_transform(AllGoodSamples)
     mal_sparse = FV_mal.fit_transform(AllMalSamples)
-    #pprint.pprint(FV_mal.vocabulary_)
-    return good_sparse, mal_sparse
-
-
-# def set_Xtest_sparse(feature, FV):
-#     return Xtest.toarray()[FV.vocabulary_[feature]]
-#
-#
-# def reformat_Xtest(tfidf_dict_good, tfidf_dict_mal):
-#     for f_name in tfidf_dict_mal:
-#         num = set_Xtest_sparse(f_name, FV_mal)
-#         if num<= 0.1 and num is not None:
-#             Xtest[num] = random.uniform(0.5, 1)
-
-
-def belong_feature(feature_name):
-    flag_good=False
-    flag_mal=False
-    if FV_good.vocabulary_.get(feature_name) is not None:
-        flag_good=True
-
-    if FV_mal.vocabulary_.get(feature_name) is not None:
-        flag_mal=True
-
-    return flag_good, flag_mal
-
+    # pprint.pprint(FV_mal.vocabulary_)
+    # return good_sparse, mal_sparse
+    return FV_mal, FV_good
 
 def set_sparse_column_to_zero(matrix, col_index):
     # Make sure the matrix is in the CSC format
@@ -154,94 +107,115 @@ def set_sparse_column_to_zero(matrix, col_index):
     return matrix
 
 
-def sum_sparse_column(matrix, col_index):
-    # Make sure the matrix is in the CSC format
-    matrix = csc_matrix(matrix)
-    # Get the indices of non-zero elements in the column
-    col_indices = matrix.indices[matrix.indptr[col_index]:matrix.indptr[col_index + 1]]
-    # Get the values of non-zero elements in the column
-    col_values = matrix.data[matrix.indptr[col_index]:matrix.indptr[col_index + 1]]
-    # Sum the values
-    return sum(col_values)
+def get_features_avg(sparse_matrix):
+    sum_array = sparse_matrix.sum(axis=0)
+    length = sparse_matrix.shape[0]
+    print length
+    for sum in sum_array:
+        sum /= length
+
+    return sum_array
 
 
-def get_feature_avg(feature_name, sparse_matrix, FV):
-    sum = 0.0
-    feature_idx = FV.vocabulary_[feature_name]
+def get_feature_sets():
+    return_sparse()
+    good_dict_feature = FV_good.vocabulary_
+    mal_dict_feature = FV_mal.vocabulary_
 
-    sparse_matrix_dense = sparse_matrix.todense()
+    avg_arr = np.ravel(get_features_avg(Xtest))
+    global good_feature_set, mal_feature_set
+    good_feature_set = {}
+    mal_feature_set = {}
 
-    sum_sparse_column(sparse_matrix_dense, feature_idx)
-    return sum/sparse_matrix.shape[0]
+    for feature in Xtest_features_names:
 
+        if Xtest_features_vocabulary[feature] >= 5000:
+            break
 
-def set_Xtest(feature_name):
-    sparse_good, sparse_mal = return_sparse()
+        flag_in_good, flag_in_mal = feature in FV_good.get_feature_names(), feature in FV_mal.get_feature_names()
 
-    flag_good, flag_mal = belong_feature(feature_name)
+        if flag_in_good:
+            average_feature = avg_arr[good_dict_feature[feature]]
 
-    global Xtest
-    if flag_mal:
-        FV_original_voc = FV_original.vocabulary_
-        feature_idx = FV_original_voc[feature_name]
-        num = get_feature_avg(feature_name, sparse_mal, FV_mal)
-        if num > 0.4:
+        if flag_in_mal:
 
-            Xtest = set_sparse_column_to_zero(Xtest, feature_idx)
-            pprint.pprint(Xtest)
+            average_feature = avg_arr[Xtest_features_vocabulary[feature]]
+            if average_feature > 0.2:
+                mal_feature_set[feature] = Xtest_features_vocabulary[feature], average_feature
+                mal_feature_set[Xtest_features_vocabulary[feature]] = feature, average_feature
+                print "ok"
 
-    # if flag_good and flag_mal:
-    #     return
-    #
-    # elif flag_good:
-    #     return
-    #
-    # elif flag_mal:
-    #     FV_original_voc = FV_original.vocabulary_
-    #     feature_idx = FV_original_voc[feature_name]
-    #     num = get_feature_avg(feature_name, sparse_mal, FV_mal)
-    #     if num > 0.4:
-    #
-    #         Xtest = set_sparse_column_to_zero(Xtest, feature_idx)
-    #         pprint.pprint(Xtest)
+        # else:
+        #     Logger.info("The feature isn't in good, mal!")
+
+    return good_feature_set, mal_feature_set
 
 
-def set_all_feature():
-    print ("adlkjfhadlfhasdkfjhadlkfjhasdlkfjahsdlkjashld!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    i=0
-    for feature_name in FV_original.get_feature_names():
-        if i == 200:
-            return Xtest
-        set_Xtest(feature_name)
-        i+=1
+def get_feature_name(idx):
+    for key in Xtest_features_vocabulary.keys():
+        if key == idx:
+            return Xtest_features_names[idx]
+
+    return None
+
+
+def change_random_value():
+    #good_feature_set, mal_feature_set = get_feature_sets()
+    #FV_mal, FV_good = return_sparse()
+
+    for i, j in zip(*Xtest.nonzero()):
+        Xtest[i, j] = Xtest[i, j] * (0.01 * random())
+        # if get_feature_name(j) in FV_mal.get_feature_names():
+        #
+        #
+        # if get_feature_name(j) in FV_good.get_feature_names():
+        #     Xtest[i, j] = Xtest[i, j] * 0.01
+
     return Xtest
+
 
 
 
 def wrrap():
     get_last_try()
+    print Xtest.shape
+    # reformat_Xtest(dict_good, dict_mal)
+    new_Xtest = change_random_value()
 
-    #reformat_Xtest(dict_good, dict_mal)
-    #new_Xtest = Xtest_attack()
 
-    new_Ypred = clf.predict(set_all_feature())
+    # new_Xtest = change_txt()
+    # print new_Xtest.shape
+    #
+    # new_Xtest = FSAlgo.transform(new_Xtest)
 
+    p = clf.predict(new_Xtest)
+
+    #before = accuracy_score(Ytest, Ypred)
     before = accuracy_score(Ytest, Ypred)
-    after = accuracy_score(Ytest, new_Ypred)
+    after = accuracy_score(Ytest, p)
 
-    print "Accuracy before attack: ", before
-    print(metrics.classification_report(Ytest, Ypred, labels=[1, -1], target_names=['Malware', 'Goodware']))
-
-    print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! After Attack !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-
-    print "Accuracy after attack: ", after
-    print(metrics.classification_report(Ytest, new_Ypred, labels=[1, -1],
-                                        target_names=['Malware', 'Goodware']))
+    if before - after < 0.045:
+        print "try againnnnnnnnnnnnnnnnnnnn"
+        wrrap()
 
 
 
+    else:
+        #count_old_Xtest = count_files_dir(".\\Xtests_attacked")
+        dump_argument(".\\Xtests_attacked", "Xtest_attacked", new_Xtest)
+        print "............................................................................................"
+        print "Accuracy before attack: ", before
+        print(metrics.classification_report(Ytest, Ypred, labels=[1, -1], target_names=['Malware', 'Goodware']))
 
+        print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! After Attack !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+
+        print "Accuracy after attack: ", after
+        print(metrics.classification_report(Ytest, p, labels=[1, -1],
+                                            target_names=['Malware', 'Goodware']))
+        print "............................................................................................"
 
 
 if __name__ == '__main__':
     wrrap()
+
+    #replace_strings_in_files('C:\\Users\\hille\\PycharmProjects\\csbd-O.S-android\\src\\AllGoodSamples_change\\AllGoodSamples_change_1\\try', "is", "okdfnasldkfn")

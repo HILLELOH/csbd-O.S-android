@@ -86,6 +86,7 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
     Logger.info(FeatureVectorizer)
 
     Logger.info("#################################################################################")
+    dump_argument(".\\FVs_change", "FV_change", FeatureVectorizer)
 
     X = FeatureVectorizer.fit_transform(AllMalSamples + AllGoodSamples)
 
@@ -95,7 +96,8 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
     dump_argument(".\\FEATURES_VOCABULARYS", "FEATURE_VOCABULARY", feature_vocabulary_array)
 
     #pprint.pprint(FeatureVectorizer.get_feature_names())
-
+    FeatureVectorizer_change = TF(input='filename', lowercase=False, token_pattern=None,
+                           tokenizer=MyTokenizer, binary=FeatureOption, dtype=np.float64)
     dump_argument(".\\FVs", "FV", FeatureVectorizer)
 
     Logger.info("#################################################################################")
@@ -128,6 +130,24 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
         shutil.copy(txt_file,'.\\AllGoodSamples\\AllGoodSamples_%s\\mal_txt_file_%s.txt' % (count_AllGoodSamples, count_files))
         count_files += 1
 
+    if not os.path.exists(".\\AllMalSamples_change"):
+        os.mkdir(".\\AllMalSamples_change")
+    count_AllMalSamples = count_folders_dir(".\\AllMalSamples_change") + 1
+    os.mkdir(".\\AllMalSamples_change\\AllMalSamples_change_%s" % count_AllMalSamples)
+    count_files = 1
+    for txt_file in AllMalSamples:
+        shutil.copy(txt_file, '.\\AllMalSamples_change\\AllMalSamples_change_%s\\good_txt_file_%s.txt' % (count_AllMalSamples, count_files))
+        count_files += 1
+
+    if not os.path.exists(".\\AllGoodSamples_change"):
+        os.mkdir(".\\AllGoodSamples_change")
+    count_AllGoodSamples = count_folders_dir(".\\AllGoodSamples_change") + 1
+    os.mkdir(".\\AllGoodSamples_change\\AllGoodSamples_change_%s" % count_AllGoodSamples)
+    count_files = 1
+    for txt_file in AllGoodSamples:
+        shutil.copy(txt_file,'.\\AllGoodSamples_change\\AllGoodSamples_change_%s\\mal_txt_file_%s.txt' % (count_AllGoodSamples, count_files))
+        count_files += 1
+
     GoodLabels.fill(-1)
     Y = np.concatenate((MalLabels, GoodLabels), axis=0)
     Logger.info("Label array - generated")
@@ -157,6 +177,9 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
         FSAlgo = SelectKBest(chi2, k=NumFeaturesToBeSelected)
 
         XTrain = FSAlgo.fit_transform(XTrain, YTrain)
+        dump_argument(".\\FSAlgos", "FSAlgo", FSAlgo)
+        print XTest.shape
+        print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         XTest = FSAlgo.transform(XTest)
 
     Logger.info("Gonna perform classification with C-RandomForest")
@@ -183,8 +206,6 @@ def RandomClassification(MalwareCorpus, GoodwareCorpus, TestSize, NumFeaturesToB
     # Step 5: Evaluate the best model on test set
     Ypred = RFmodels.predict(XTest)
     dump_argument(".\\Ypreds", "Ypred", Ypred)
-
-
 
     Accuracy = accuracy_score(YTest, Ypred)
 

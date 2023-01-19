@@ -3,8 +3,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer as TF
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import accuracy_score
-from sklearn.cross_validation import cross_val_score
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn import metrics
 import os, sys, glob
